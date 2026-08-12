@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>舊系統功能現勘紀錄</title>
+<!-- 連線時載入 Noto Sans TC（Google Fonts，100~900 字重）；離線時此請求會失敗，
+     交由下方 @font-face 的 local() 與字型堆疊改用本機字體，不影響使用。 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&display=swap">
+<style>
+  /* 只吃本機已安裝的 Noto Sans TC（不連網路）。離線且本機有裝時走這裡；
+     沒裝則此 @font-face 無來源，字型堆疊自動往後掉到微軟正黑體。 */
+  @font-face{
+    font-family:"Noto Sans TC Local";
+    src:local("Noto Sans TC"),local("Noto Sans Traditional Chinese"),
+        local("Noto Sans TC Regular"),local("NotoSansTC-Regular");
+  }
+  /* =====================================================================
+     視覺樣式（可依喜好調整；不影響功能）
+     ===================================================================== */
+  :root{
+    /* 使用者色票：#4C5760 石板藍灰／#93A8AC 鼠尾草／#D7CEB2 沙／#A59E8C 灰褐 */
+    --bg:#EEEADB; --surface:#FFFFFF; --surface-2:#F7F3E9; --surface-3:#EBE6D6;
+    --ink:#3F484F; --ink-soft:#6B7278; --ink-faint:#9DA09C;
+    --line:#DDD6C4; --line-soft:#E8E2D2;
+    --accent:#4C5760; --accent-ink:#3A434B; --accent-wash:#E7EAEC;
+    --mint:#93A8AC; --mint-deep:#6E8A90; --mint-wash:#E6ECEC;
+    --peach:#D7CEB2; --peach-deep:#C3B994;
+    --warn:#A6604B; --warn-wash:#EFE1D9;
+    --ok:#6E8A90;
+    --radius:12px; --radius-sm:8px;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    /* 解析順序：本機 Noto Sans TC（離線可用）→ Google 下載的 Noto Sans TC（連線時）→ 微軟正黑體 → 系統字體 */
+    --sans:"Noto Sans TC Local","Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --shadow:0 1px 2px rgba(63,72,79,.06),0 4px 16px rgba(63,72,79,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+
+  /* ---- 頂部列 ---- */
+  header.top{
+    position:sticky; top:0; z-index:40;
+    background:linear-gradient(180deg,rgba(238,234,219,.92),rgba(238,234,219,.82));
+    backdrop-filter:saturate(1.2) blur(8px);
+    border-bottom:1px solid var(--accent);
+    box-shadow:0 1px 0 rgba(76,87,96,.10),0 6px 18px rgba(63,72,79,.05);
+  }
+  .top-inner{max-width:1120px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:11px;margin-right:auto}
+  .brand-text{display:flex;flex-direction:column;gap:2px}
+  .brand-mark{width:26px;height:26px;flex:none;display:block}
+  .brand-mark .pg{fill:var(--surface);stroke:var(--accent);stroke-width:1.6}
+  .brand-mark .fold{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-linejoin:round}
+  .brand-mark .ln{stroke:var(--accent);stroke-width:1.4;stroke-linecap:round}
+  .brand-mark .lens{fill:var(--mint-wash);stroke:var(--accent);stroke-width:1.6}
+  .brand-mark .hdl{stroke:var(--accent);stroke-width:1.9;stroke-linecap:round}
+  .brand h1{font-size:17px;margin:0;font-weight:650;letter-spacing:-.01em;color:var(--accent-ink)}
+  .brand .sub{font-family:var(--mono);font-size:11px;color:var(--ink-soft);letter-spacing:.06em;font-weight:600}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .save-flag{font-family:var(--mono);font-size:11px;color:var(--ink-faint);align-self:center;white-space:nowrap}
+
+  /* ---- 按鈕 ---- */
+  button{font-family:inherit;font-size:14px;cursor:pointer;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);border-radius:var(--radius-sm);padding:8px 13px;
+    transition:background .12s,border-color .12s,transform .05s;line-height:1.2}
+  button:hover{background:var(--surface-2)}
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{background:var(--accent-ink)}
+  button.ghost{background:transparent;border-color:transparent;color:var(--ink-soft);padding:6px 9px}
+  button.ghost:hover{background:var(--surface-3)}
+  button.danger{color:var(--warn);border-color:transparent;background:transparent}
+  button.danger:hover{background:var(--warn-wash)}
+  button.danger.armed{background:var(--warn);border-color:var(--warn);color:#fff}
+  button.tiny{font-size:12px;padding:5px 9px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ---- 容器 ---- */
+  main{max-width:1120px;margin:0 auto;padding:22px 22px 120px}
+
+  /* ---- 現勘資訊列 ---- */
+  .visit{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:18px;box-shadow:var(--shadow);
+    display:grid;grid-template-columns:1fr 1fr 2fr;gap:14px}
+  .visit .fld label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px}
+  .visit input{width:100%}
+
+  /* ---- 總覽 ---- */
+  .overview{display:flex;align-items:center;gap:14px;margin:2px 2px 14px;flex-wrap:wrap}
+  .overview .count{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+  .overview .bar{flex:1;min-width:160px;height:6px;background:var(--line-soft);border-radius:99px;overflow:hidden}
+  .overview .bar i{display:block;height:100%;background:var(--mint-deep);border-radius:99px;transition:width .25s}
+
+  /* ---- 畫面卡 ---- */
+  .screen{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    margin-bottom:16px;box-shadow:var(--shadow);overflow:hidden}
+  .screen-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(0deg,var(--surface-2),var(--surface))}
+  .screen-idx{font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--peach);
+    border-radius:6px;padding:3px 8px;letter-spacing:.05em;white-space:nowrap}
+  .screen-name{flex:1;min-width:0}
+  .screen-name input{width:100%;border:1px solid var(--line);background:var(--surface);
+    font-size:16px;font-weight:600;padding:7px 10px;border-radius:var(--radius-sm)}
+  .screen-name input:hover{border-color:#C9C0AC}
+  .screen-name input::placeholder{color:var(--ink-faint);font-weight:500}
+  .prog{font-family:var(--mono);font-size:12px;color:var(--ink-soft);white-space:nowrap}
+  .prog b{color:var(--accent-ink)}
+  .screen-body{padding:4px 18px 18px}
+  .caret{transition:transform .15s}
+  .caret.closed{transform:rotate(-90deg)}
+
+  .section-label{display:flex;align-items:center;gap:8px;margin:16px 2px 10px}
+  .section-label .eyebrow{white-space:nowrap}
+  .section-label .rule{flex:1;height:1px;background:var(--line-soft)}
+
+  /* ---- 欄位格 ---- */
+  .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:13px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.wide{grid-column:1/-1}
+  .field-head{display:flex;align-items:center;gap:7px}
+  .dot{width:8px;height:8px;border-radius:99px;background:var(--line);flex:none;transition:background .15s}
+  .dot.on{background:var(--ok)}
+  .field-head label{font-size:13px;color:var(--ink-soft);font-weight:500}
+  input,textarea,select{font-family:inherit;font-size:14px;color:var(--ink);background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;width:100%}
+  textarea{resize:vertical;min-height:38px;line-height:1.5}
+  input:hover,textarea:hover{border-color:#C9C0AC}
+
+  /* ---- 是否／待確認 pills ---- */
+  .pills{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;width:fit-content}
+  .pills button{border:none;border-radius:0;background:var(--surface);color:var(--ink-soft);
+    padding:7px 14px;font-size:13px;border-right:1px solid var(--line)}
+  .pills button:last-child{border-right:none}
+  .pills button.sel{background:var(--mint-wash);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--mint-deep)}
+  .pills button.sel[data-val="no"]{background:var(--surface-3);color:var(--ink);box-shadow:inset 0 0 0 1px #C9C0AC}
+
+  /* ---- 元件卡 ---- */
+  .comp{border:1px solid var(--line);border-left:3px solid var(--mint);border-radius:var(--radius-sm);
+    background:var(--surface-2);margin:11px 0;overflow:hidden}
+  .comp-head{display:flex;align-items:center;gap:10px;padding:10px 12px}
+  .ccaret{border:none;background:transparent;padding:0;width:22px;height:22px;display:flex;align-items:center;
+    justify-content:center;color:var(--ink-soft);flex:none}
+  .ccaret svg{transition:transform .15s}
+  .ccaret.closed svg{transform:rotate(-90deg)}
+  .comp.collapsed{background:var(--surface-2)}
+  .multi{display:flex;flex-wrap:wrap;gap:6px}
+  .mchip{font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);
+    border-radius:99px;padding:6px 13px;line-height:1.2}
+  .mchip:hover{background:var(--surface-2)}
+  .mchip.on{background:var(--mint-wash);color:var(--ink);box-shadow:inset 0 0 0 1px var(--mint-deep);font-weight:600}
+  .cond-input{margin-top:7px}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;letter-spacing:.02em;
+    color:var(--ink);background:var(--mint-wash);border:1px solid var(--line);border-radius:6px;padding:3px 9px;white-space:nowrap}
+  .badge .ic{width:14px;height:14px;color:var(--accent);flex:none}
+  .comp-label{flex:1;min-width:0}
+  .comp-label input{width:100%;border:1px solid var(--line);background:var(--surface);
+    font-weight:600;font-size:14px;padding:6px 9px;border-radius:var(--radius-sm)}
+  .comp-label input:hover{border-color:#C9C0AC}
+  .comp-label input::placeholder{color:var(--ink-faint);font-weight:500}
+  .comp-body{padding:2px 12px 13px}
+
+  /* ---- 加入元件面板 ---- */
+  .add-comp{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+  .add-comp .eyebrow{margin-bottom:8px;display:block}
+  .type-grid{display:flex;flex-wrap:wrap;gap:7px}
+  .type-chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;
+    border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px}
+  .type-chip:hover{background:var(--surface-2)}
+  .type-chip .ic{width:15px;height:15px;color:var(--accent);flex:none}
+
+  /* ---- 空狀態 ---- */
+  .empty{text-align:center;padding:64px 20px;color:var(--ink-soft)}
+  .empty h2{font-size:18px;color:var(--ink);margin:0 0 8px}
+  .empty p{margin:0 0 20px;max-width:440px;margin-inline:auto}
+
+  /* ---- 浮動新增鈕 ---- */
+  .fab{position:fixed;right:24px;bottom:24px;z-index:30}
+  .fab button{box-shadow:var(--shadow);padding:12px 20px;font-size:15px;font-weight:600;border-radius:99px}
+
+  /* ---- 架構（主從版面）---- */
+  .arch{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+  .arch.tree-collapsed{grid-template-columns:34px minmax(0,1fr)}
+  .tree-panel{position:sticky;top:78px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;max-height:calc(100vh - 100px);overflow:auto}
+  .arch.tree-collapsed .tree-panel{display:none}
+  .tree-reveal{display:none}
+  .arch.tree-collapsed .tree-reveal{display:flex;align-items:center;justify-content:center;position:sticky;top:78px;
+    width:34px;height:56px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--surface);
+    box-shadow:var(--shadow);font-size:16px;color:var(--ink-soft)}
+  .tree-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .tree-empty{font-size:13px;color:var(--ink-faint);padding:14px 6px;line-height:1.8}
+  .tree-add{width:100%;margin-top:10px}
+  .tnode-list{list-style:none;margin:0;padding:0}
+  .tnode-list .tnode-list{margin-left:13px;padding-left:9px;border-left:1px dashed var(--line)}
+  .trow{display:flex;align-items:center;gap:4px;padding:5px 6px;border-radius:8px;cursor:pointer;position:relative}
+  .trow:hover{background:var(--surface-2)}
+  .trow.sel{background:var(--accent-wash);box-shadow:inset 0 0 0 1px var(--accent)}
+  .tgrip{width:16px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);
+    cursor:grab;flex:none;opacity:.45;transition:opacity .12s}
+  .trow:hover .tgrip{opacity:1}
+  .tgrip:active{cursor:grabbing}
+  .tgrip svg{width:12px;height:15px;fill:currentColor}
+  .trow.drag-source{opacity:.4}
+  .trow.drop-into{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-wash)}
+  .trow.drop-bad{box-shadow:inset 0 0 0 2px var(--warn);cursor:no-drop}
+  .trow.drop-before::before,.trow.drop-after::after{content:'';position:absolute;left:8px;right:8px;height:2px;
+    background:var(--accent);border-radius:2px}
+  .trow.drop-before::before{top:-1px}
+  .trow.drop-after::after{bottom:-1px}
+  .tcaret{border:none;background:transparent;padding:0;width:20px;height:20px;display:flex;align-items:center;
+    justify-content:center;color:var(--ink-soft);flex:none}
+  .tcaret svg{transition:transform .15s}
+  .tcaret.closed svg{transform:rotate(-90deg)}
+  .tcaret-sp{width:20px;flex:none}
+  .tname{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tname-edit{width:100%;border:1px solid var(--accent);background:var(--surface);font-size:14px;font-weight:600;
+    padding:2px 6px;border-radius:6px;font-family:inherit}
+  .tprog{font-family:var(--mono);font-size:10px;color:var(--mint-deep);flex:none}
+  .trow-acts{display:none;gap:1px;flex:none}
+  .trow:hover .trow-acts,.trow.sel .trow-acts{display:flex}
+  .tmini{border:none;background:transparent;padding:0;width:22px;height:22px;border-radius:6px;font-size:15px;
+    line-height:1;color:var(--ink-soft);display:flex;align-items:center;justify-content:center}
+  .tmini:hover{background:var(--surface-3);color:var(--ink)}
+  .tmini.danger:hover{background:var(--warn-wash);color:var(--warn)}
+  .tmini.armed{background:var(--warn);color:#fff;width:auto;padding:0 6px}
+
+  .detail-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;min-width:0}
+  .detail-empty{padding:64px 24px;text-align:center;color:var(--ink-soft)}
+  .detail-head{padding:14px 18px;border-bottom:1px solid var(--line);background:linear-gradient(0deg,var(--surface-2),var(--surface))}
+  .crumbs{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12px;margin-bottom:11px}
+  .crumb-label{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);
+    background:var(--surface-3);padding:2px 7px;border-radius:5px}
+  .crumb{color:var(--ink-soft)}
+  .crumb.cur{color:var(--accent-ink);font-weight:600}
+  .crumb-sep{color:var(--ink-faint)}
+  .detail-title{display:flex;align-items:center;gap:12px}
+  .detail-title input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);
+    font-size:16px;font-weight:600;padding:7px 10px;border-radius:var(--radius-sm)}
+  .detail-title input:hover{border-color:#C9C0AC}
+  .detail-title input::placeholder{color:var(--ink-faint);font-weight:500}
+  .detail-body{padding:6px 18px 20px}
+
+  @media(max-width:860px){
+    .arch,.arch.tree-collapsed{grid-template-columns:1fr}
+    .tree-panel{position:static;max-height:none}
+    .arch.tree-collapsed .tree-reveal{position:static;width:auto;height:auto;padding:8px 14px}
+  }
+
+  /* ---- Modal ---- */
+  .overlay{position:fixed;inset:0;background:rgba(63,72,79,.42);z-index:100;display:flex;
+    align-items:center;justify-content:center;padding:20px}
+  .modal{background:var(--surface);border-radius:var(--radius);width:min(640px,100%);max-height:86vh;
+    display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+  .modal-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .modal-head h3{margin:0;font-size:16px;flex:1}
+  .modal-body{padding:16px 20px;overflow:auto}
+  .modal-body p{margin:0 0 12px;color:var(--ink-soft);font-size:13px}
+  .modal textarea{width:100%;min-height:220px;font-family:var(--mono);font-size:12px;line-height:1.5}
+  .modal-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  .modal .warn-text{color:var(--warn);font-weight:600}
+  button.danger-solid{background:var(--warn);border-color:var(--warn);color:#fff}
+  button.danger-solid:hover{filter:brightness(.94);background:var(--warn)}
+  .file-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+
+  /* ---- 截圖上傳 ---- */
+  .imgs-zone{border:1px dashed var(--line);border-radius:var(--radius-sm);background:var(--surface);
+    padding:12px;transition:border-color .15s,background .15s}
+  .imgs-zone.drag{border-color:var(--accent);background:var(--accent-wash)}
+  .imgs-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .imgs-hint{font-size:12px;color:var(--ink-faint)}
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:10px;margin-top:12px}
+  .thumbs-empty{font-size:12px;color:var(--ink-faint);margin-top:10px}
+  .thumb{position:relative;margin:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+  .thumb img{display:block;width:100%;height:96px;object-fit:cover;cursor:zoom-in}
+  .thumb figcaption{font-size:11px;color:var(--ink-soft);padding:5px 7px;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--line-soft)}
+  .thumb .del{position:absolute;top:5px;right:5px;width:22px;height:22px;padding:0;line-height:1;
+    border:none;border-radius:99px;background:rgba(63,72,79,.72);color:#fff;font-size:15px;
+    display:flex;align-items:center;justify-content:center}
+  .thumb .del:hover{background:var(--warn)}
+  .img-view{background:var(--surface);border-radius:var(--radius);max-width:min(92vw,1000px);max-height:90vh;
+    display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .img-view-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .img-view-head span{flex:1;font-size:13px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .img-view img{max-width:100%;max-height:calc(90vh - 54px);object-fit:contain;background:var(--surface-3)}
+
+  @media(max-width:720px){
+    .visit{grid-template-columns:1fr}
+    .top-inner{padding:12px 16px}
+    main{padding:16px 14px 120px}
+    .screen-body{padding:4px 12px 14px}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path class="pg" d="M6 3.2h6.5L17 7.7V17a1.8 1.8 0 0 1-1.8 1.8H6A1.8 1.8 0 0 1 4.2 17V5A1.8 1.8 0 0 1 6 3.2Z"/>
+        <path class="fold" d="M12.3 3.4v4.1h4.1"/>
+        <path class="ln" d="M7.2 9.6h5"/>
+        <path class="ln" d="M7.2 12h3.2"/>
+        <circle class="lens" cx="14.3" cy="15" r="3.5"/>
+        <path class="hdl" d="M16.9 17.6 19.6 20.3"/>
+      </svg>
+      <div class="brand-text">
+        <h1>舊系統功能現勘紀錄</h1>
+        <span class="sub">FIELD SURVEY · v1</span>
+      </div>
+    </div>
+    <span class="save-flag" id="saveFlag">尚未變更</span>
+    <div class="top-actions">
+      <button class="tiny" id="btnImport">載入存檔</button>
+      <button class="tiny" id="btnExportJson">匯出 JSON</button>
+      <button class="tiny" id="btnExportMd">匯出 Markdown</button>
+      <button class="tiny" id="btnExportBundle">全部打包</button>
+      <button class="tiny danger" id="btnClearAll">清空資料</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="visit">
+    <div class="fld"><label for="mClient">客戶／機關名稱</label>
+      <input id="mClient" data-meta="client" placeholder="例：某某銀行"></div>
+    <div class="fld"><label for="mDate">拜訪日期</label>
+      <input id="mDate" type="date" data-meta="date"></div>
+    <div class="fld"><label for="mNote">功能名稱</label>
+      <input id="mNote" data-meta="note" placeholder="例：核心系統／授信查詢模組"></div>
+  </section>
+
+  <div class="overview">
+    <span class="count" id="ovCount">共 0 個節點</span>
+    <div class="bar"><i id="ovBar" style="width:0%"></i></div>
+    <span class="count" id="ovProg">已填 0／0</span>
+  </div>
+
+  <div id="app"></div>
+</main>
+
+<div class="fab"><button class="primary" id="btnAddScreen">＋ 新增頂層節點</button></div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* =======================================================================
+   檢查項目定義（★ 未來要新增／修改項目，只改這一段就好 ★）
+
+   ├ 每個「型態」：
+   │   'check'    → 是／否／待確認（三選一）
+   │   'req'      → 是／否／選擇性／待確認；選「選擇性」會出現填「條件」的輸入框
+   │   'choice'   → 自訂選項的選擇按鈕；需在該欄位加 opts:[[值,顯示文字],…]
+   │   'multi'    → 多選按鈕（可複選）；同樣需加 opts:[[值,顯示文字],…]
+   │   'text'     → 單行文字
+   │   'textarea' → 多行文字（會自動占滿整列）
+   │   'images'   → 上傳多張截圖（會自動占滿整列，圖片壓縮後存進存檔）
+   │   （text／textarea 可加 hint:'…' 當作輸入框提示文字）
+   │
+   ├ 要在某類型多問一項：於該類型的陣列加一行 { key, label, type }
+   │   key 需唯一（同一類型內不重複），label 是畫面上顯示的問題文字。
+   ├ 要新增一整個元件類型：在 COMPONENT_TYPES 加一組，並給一個 icon。
+   │   icon 是 SVG 內容字串（可用 24×24 座標、只放線條路徑），會用 currentColor
+   │   自動上色顯示於徽章與「加入元件」按鈕上。照下方任一類型複製修改即可。
+   ======================================================================= */
+
+const SCREEN_FIELDS = [
+  { key:'freq',    label:'使用頻率',        type:'text' },
+  { key:'roles',   label:'使用角色與權限',   type:'textarea' },
+  { key:'purpose', label:'用途說明',        type:'textarea' },
+  { key:'pre',     label:'前置條件',        type:'textarea' },
+  { key:'law',     label:'相關法規／規範',   type:'textarea' },
+  { key:'issue',   label:'已知問題／使用者抱怨', type:'textarea' },
+  { key:'shots',   label:'截圖',            type:'images' },
+];
+
+const COMPONENT_TYPES = {
+  '下拉選單': { icon:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 10l4 4 4-4"/>', fields:[
+    { key:'req',    label:'是否必填',            type:'req' },
+    { key:'search', label:'可否搜尋選項',        type:'check' },
+    { key:'multi',  label:'是否可多選',          type:'check' },
+    { key:'def',    label:'預設選項',            type:'text' },
+    { key:'src',    label:'選項來源（DB／固定清單／API）', type:'textarea' },
+    { key:'sort',   label:'選項排序方式',        type:'text' },
+    { key:'link',   label:'與其他欄位的連動',    type:'textarea' },
+    { key:'reqmsg', label:'必填未填的提示文字',  type:'textarea' },
+    { key:'note',   label:'備註',               type:'textarea' },
+  ]},
+  '輸入框': { icon:'<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M12 9.5v5"/><path d="M10.5 9.5h3"/><path d="M10.5 14.5h3"/>', fields:[
+    { key:'req',   label:'是否必填',             type:'req' },
+    { key:'chars', label:'可輸入字元類型',        type:'multi', opts:[['num','數字'],['en','英文'],['zh','中文'],['sym','符號']] },
+    { key:'width', label:'半形／全形限制',        type:'text' },
+    { key:'max',   label:'最大字元長度',          type:'text' },
+    { key:'fmt',   label:'格式限制（日期／金額等）', type:'text' },
+    { key:'match', label:'模糊或精準查詢',        type:'text' },
+    { key:'valid', label:'驗證時機',             type:'choice', opts:[['now','即時'],['submit','送出時'],['na','待確認']] },
+    { key:'def',   label:'預設值',               type:'text' },
+    { key:'errmsg',label:'錯誤提示文字',          type:'textarea' },
+    { key:'note',  label:'備註',                type:'textarea' },
+  ]},
+  '日期／區間': { icon:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 2.5v4"/><path d="M16 2.5v4"/>', fields:[
+    { key:'req',   label:'是否必填',             type:'req' },
+    { key:'fmt',   label:'日期格式',             type:'text' },
+    { key:'era',   label:'民國或西元',           type:'text' },
+    { key:'range', label:'是否為區間',           type:'check' },
+    { key:'def',   label:'預設區間',             type:'text' },
+    { key:'maxr',  label:'最大可查詢區間',        type:'text' },
+    { key:'chk',   label:'起訖驗證（起≤迄）',     type:'check' },
+    { key:'one',   label:'可否只填單邊',          type:'check' },
+    { key:'errmsg',label:'錯誤提示文字',          type:'textarea' },
+    { key:'note',  label:'備註',                type:'textarea' },
+  ]},
+  'Radio（單選）': { icon:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>', fields:[
+    { key:'req',   label:'是否必選',             type:'req' },
+    { key:'opts',  label:'選項與來源',           type:'textarea' },
+    { key:'def',   label:'預設選擇',             type:'text' },
+    { key:'note',  label:'備註',                type:'textarea', hint:'例：互斥行為、與其他欄位的連動…' },
+  ]},
+  'Checkbox（複選）': { icon:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 12l3 3 5-6"/>', fields:[
+    { key:'req',   label:'是否必選',             type:'req' },
+    { key:'opts',  label:'選項與來源',           type:'textarea' },
+    { key:'def',   label:'預設勾選',             type:'text' },
+    { key:'note',  label:'備註',                type:'textarea', hint:'例：可否複選、與其他欄位的連動…' },
+  ]},
+  '按鈕與動作': { icon:'<path d="M5 3l6 16 2.2-6.2L19.5 11z"/>', fields:[
+    { key:'req',   label:'是否必填',             type:'req' },
+    { key:'name',  label:'按鈕名稱',             type:'text' },
+    { key:'act',   label:'觸發行為',             type:'textarea' },
+    { key:'perm',  label:'權限控制',             type:'text' },
+    { key:'confirm',label:'是否需二次確認',      type:'check' },
+    { key:'note',  label:'備註',                type:'textarea' },
+  ]},
+  '查詢邏輯': { icon:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>', fields:[
+    { key:'req',   label:'是否必填',             type:'req' },
+    { key:'src',   label:'對應資料表／來源',      type:'textarea' },
+    { key:'combo', label:'條件組合方式（AND／OR）', type:'textarea' },
+    { key:'page',  label:'分頁方式與每頁筆數',     type:'text' },
+    { key:'sort',  label:'預設排序',             type:'text' },
+    { key:'nodata',label:'查無資料的提示',        type:'textarea' },
+    { key:'perf',  label:'大量資料的效能考量',     type:'textarea' },
+    { key:'note',  label:'備註',                type:'textarea' },
+  ]},
+  '結果清單': { icon:'<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 9.5h18"/><path d="M3 14.5h18"/><path d="M9 9.5v10"/>', fields:[
+    { key:'req',   label:'是否必填',             type:'req' },
+    { key:'cols',  label:'顯示欄位與格式',        type:'textarea' },
+    { key:'sort',  label:'可否排序',             type:'check' },
+    { key:'drill', label:'可否點入明細',          type:'check' },
+    { key:'sum',   label:'合計／小計',           type:'text' },
+    { key:'page',  label:'分頁方式',             type:'text' },
+    { key:'note',  label:'備註',                type:'textarea' },
+  ]},
+  '報表匯出': { icon:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11.5v5"/><path d="M9.5 14l2.5 2.5 2.5-2.5"/>', fields:[
+    { key:'req',   label:'是否必填',             type:'req' },
+    { key:'fmt',   label:'檔案格式（Excel／PDF／CSV）', type:'text' },
+    { key:'fname', label:'檔名規則',             type:'text' },
+    { key:'cols',  label:'報表欄位（與畫面是否一致）', type:'textarea' },
+    { key:'deco',  label:'表頭／頁尾／浮水印',     type:'textarea' },
+    { key:'limit', label:'資料量上限',           type:'text' },
+    { key:'mode',  label:'即時或背景批次',        type:'text' },
+    { key:'enc',   label:'編碼／中文處理',        type:'text' },
+    { key:'note',  label:'備註',                type:'textarea' },
+  ]},
+  '錯誤與提示': { icon:'<path d="M12 4.5L2.5 20h19z"/><path d="M12 10v4"/><path d="M12 17h.01"/>', fields:[
+    { key:'required', label:'是否必填',          type:'req' },
+    { key:'req',   label:'必填未填的提示',        type:'textarea' },
+    { key:'nodata',label:'查無資料的提示',        type:'textarea' },
+    { key:'timeout',label:'逾時的處理與提示',     type:'textarea' },
+    { key:'perm',  label:'權限不足的提示',        type:'textarea' },
+    { key:'note',  label:'備註',                type:'textarea' },
+  ]},
+  '自訂備註': { icon:'<path d="M4 20h4L19.5 8.5l-4-4L4 16z"/><path d="M14 6l4 4"/>', fields:[
+    { key:'note',  label:'內容',                type:'textarea' },
+  ]},
+};
+
+/* ======================= 以下為程式邏輯，一般不需修改 ==================== */
+const STORE_KEY='legacy-survey-v1';
+const CHECK_LABELS={ yes:'是', no:'否', na:'待確認' };
+let STATE={ meta:{client:'',date:'',note:''}, tree:[], selected:null, treeHidden:false };
+
+const $=(s,r=document)=>r.querySelector(s);
+const app=$('#app');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const escA=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// 依名稱自然排序（image2 在 image10 之前）
+const nameCmp=(a,b)=>String((a&&a.name)||'').localeCompare(String((b&&b.name)||''),undefined,{numeric:true,sensitivity:'base'});
+const svgIcon=p=>'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(p||'')+'</svg>';
+const caretSvg='<svg width="12" height="12" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const gripSvg='<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="3.5" r="1.25"/><circle cx="6" cy="8" r="1.25"/><circle cx="6" cy="12.5" r="1.25"/><circle cx="10" cy="3.5" r="1.25"/><circle cx="10" cy="8" r="1.25"/><circle cx="10" cy="12.5" r="1.25"/></svg>';
+
+/* ---- 樹狀結構輔助 ---- */
+function makeNode(name){ return { id:uid(), name:name||'', collapsed:false, children:[], fields:{}, components:[] }; }
+function findNode(id, nodes=STATE.tree){ for(const n of nodes){ if(n.id===id) return n; const f=findNode(id,n.children||[]); if(f) return f; } return null; }
+function pathOf(id, nodes=STATE.tree, trail=[]){ for(const n of nodes){ const t=[...trail,n]; if(n.id===id) return t; const f=pathOf(id,n.children||[],t); if(f) return f; } return null; }
+function parentListOf(id, nodes=STATE.tree){ for(let i=0;i<nodes.length;i++){ if(nodes[i].id===id) return {list:nodes,index:i}; const r=parentListOf(id,nodes[i].children||[]); if(r) return r; } return null; }
+function isDescendant(ancId, id){ const a=findNode(ancId); return a ? !!findNode(id, a.children||[]) : false; }
+function detachNode(id){ const info=parentListOf(id); return info ? info.list.splice(info.index,1)[0] : null; }
+function moveNode(dragId, targetId, zone){
+  if(dragId===targetId || isDescendant(dragId,targetId)) return; // 不可拖入自己或自己的子孫
+  const node=detachNode(dragId); if(!node) return;
+  if(zone==='into'){ const tgt=findNode(targetId); if(!tgt){ STATE.tree.push(node); return; } tgt.children=tgt.children||[]; tgt.children.push(node); tgt.collapsed=false; }
+  else { const info=parentListOf(targetId); if(!info){ STATE.tree.push(node); return; } info.list.splice(info.index+(zone==='after'?1:0),0,node); }
+}
+function allNodes(){ const out=[]; const w=ns=>ns.forEach(n=>{ out.push(n); w(n.children||[]); }); w(STATE.tree); return out; }
+function getSelected(){ return STATE.selected ? findNode(STATE.selected) : null; }
+function menuPathStr(id){ const p=pathOf(id); return p ? p.map(n=>n.name||'（未命名）').join(' > ') : ''; }
+
+/* ---- 儲存／載入 ---- */
+let saveTimer=null;
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{
+      localStorage.setItem(STORE_KEY,JSON.stringify(STATE));
+      stampSave('已自動暫存 · '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}));
+    }catch(e){
+      stampSave('此環境無法自動暫存，請用「匯出 JSON」保存');
+    }
+  },400);
+}
+function stampSave(t){ $('#saveFlag').textContent=t; }
+function loadLocal(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(raw){ const d=JSON.parse(raw); if(d&&(Array.isArray(d.tree)||Array.isArray(d.screens))){ STATE=normalize(d); return true; } }
+  }catch(e){}
+  return false;
+}
+function normalize(d){
+  const meta={ client:d.meta?.client||'', date:d.meta?.date||'', note:d.meta?.note||'' };
+  const normNode=(n)=>({
+    id:n.id||uid(), name:n.name||'', collapsed:!!n.collapsed,
+    fields:n.fields||{},
+    components:(n.components||[]).map(c=>({ id:c.id||uid(), type:c.type, label:c.label||'', collapsed:!!c.collapsed, fields:c.fields||{} })).filter(c=>COMPONENT_TYPES[c.type]),
+    children:(n.children||[]).map(normNode)
+  });
+  let tree;
+  if(Array.isArray(d.tree)) tree=d.tree.map(normNode);
+  else if(Array.isArray(d.screens)) tree=d.screens.map(s=>normNode({name:s.name,fields:s.fields,components:s.components,collapsed:s.collapsed})); // 舊平面資料 → 頂層節點
+  else tree=[];
+  const exists=(id)=>{ let f=false; const w=ns=>ns.forEach(n=>{ if(n.id===id)f=true; w(n.children||[]); }); w(tree); return f; };
+  const selected = d.selected && exists(d.selected) ? d.selected : (tree[0]?tree[0].id:null);
+  return { meta, tree, selected, treeHidden:!!d.treeHidden };
+}
+
+/* ---- 進度計算 ---- */
+function filled(type,v){
+  if(type==='check'||type==='choice') return String(v||'')!=='';
+  if(type==='req') return String(v||'')!=='';
+  if(type==='multi'||type==='images') return Array.isArray(v)&&v.length>0;
+  return String(v||'').trim()!=='';
+}
+function nodeProgress(node){
+  let done=0,total=0;
+  SCREEN_FIELDS.forEach(f=>{ total++; if(filled(f.type,node.fields[f.key])) done++; });
+  (node.components||[]).forEach(c=>{ (COMPONENT_TYPES[c.type]?.fields||[]).forEach(f=>{ total++; if(filled(f.type,c.fields[f.key])) done++; }); });
+  return {done,total};
+}
+function compProgress(c){
+  let done=0,total=0;
+  (COMPONENT_TYPES[c.type]?.fields||[]).forEach(f=>{ total++; if(filled(f.type,c.fields[f.key])) done++; });
+  return {done,total};
+}
+function allProgress(){ let d=0,t=0; allNodes().forEach(n=>{ const p=nodeProgress(n); d+=p.done; t+=p.total; }); return {done:d,total:t}; }
+
+/* ---- 渲染 ---- */
+function fieldHTML(f, scope){
+  const v=scope[f.key]??'';
+  const on=filled(f.type,v)?' on':'';
+  const wide=(f.type==='textarea'||f.type==='images')?' wide':'';
+  const ph=f.hint||'填寫…';
+  let ctrl='';
+  if(f.type==='check'){
+    ctrl='<div class="pills" role="group" aria-label="'+escA(f.label)+'">'+
+      ['yes','no','na'].map(val=>'<button type="button" class="'+(v===val?'sel':'')+'" data-pill data-val="'+val+'">'+CHECK_LABELS[val]+'</button>').join('')+
+      '</div>';
+  }else if(f.type==='req'){
+    const opts=[['yes','是'],['no','否'],['cond','選擇性'],['na','待確認']];
+    const ck=f.key+'_cond'; const cv=scope[ck]??'';
+    ctrl='<div class="pills" role="group" aria-label="'+escA(f.label)+'">'+
+      opts.map(([val,lab])=>'<button type="button" class="'+(v===val?'sel':'')+'" data-pill data-val="'+val+'">'+lab+'</button>').join('')+
+      '</div>'+
+      (v==='cond'?'<input class="cond-input" data-condinput data-ckey="'+ck+'" value="'+escA(cv)+'" placeholder="必填條件（哪些情況下必填）">':'');
+  }else if(f.type==='choice'){
+    ctrl='<div class="pills" role="group" aria-label="'+escA(f.label)+'">'+
+      (f.opts||[]).map(([val,lab])=>'<button type="button" class="'+(v===val?'sel':'')+'" data-pill data-val="'+val+'">'+esc(lab)+'</button>').join('')+
+      '</div>';
+  }else if(f.type==='multi'){
+    const arr=Array.isArray(v)?v:[];
+    ctrl='<div class="multi" role="group" aria-label="'+escA(f.label)+'">'+
+      (f.opts||[]).map(([val,lab])=>'<button type="button" class="mchip'+(arr.includes(val)?' on':'')+'" data-multi data-val="'+val+'">'+esc(lab)+'</button>').join('')+
+      '</div>';
+  }else if(f.type==='textarea'){
+    ctrl='<textarea data-input rows="2" placeholder="'+escA(ph)+'">'+esc(v)+'</textarea>';
+  }else if(f.type==='images'){
+    const imgs=Array.isArray(v)?v:[];
+    ctrl='<div class="imgs-zone" data-imgzone>'+
+      '<div class="imgs-head">'+
+        '<button type="button" class="tiny" data-imgbtn>＋ 上傳截圖</button>'+
+        '<span class="imgs-hint">可一次多選，或把圖片拖曳到此</span>'+
+        '<input type="file" accept="image/*" multiple data-imgadd hidden>'+
+      '</div>'+
+      (imgs.length
+        ? '<div class="thumbs">'+imgs.map(im=>
+            '<figure class="thumb" data-imgid="'+im.id+'">'+
+              '<img src="'+im.data+'" alt="'+escA(im.name)+'" data-imgview loading="lazy">'+
+              '<button type="button" class="del" data-imgdel title="移除這張">×</button>'+
+              '<figcaption>'+esc(im.name)+'</figcaption>'+
+            '</figure>').join('')+'</div>'
+        : '<div class="thumbs-empty">尚未加入截圖</div>')+
+    '</div>';
+  }else{
+    ctrl='<input data-input value="'+escA(v)+'" placeholder="'+escA(ph)+'">';
+  }
+  return '<div class="field'+wide+'" data-fkey="'+f.key+'" data-ftype="'+f.type+'">'+
+    '<div class="field-head"><span class="dot'+on+'"></span><label>'+esc(f.label)+'</label></div>'+
+    ctrl+'</div>';
+}
+
+function compHTML(node,c){
+  const meta=COMPONENT_TYPES[c.type]; const p=compProgress(c); const closed=!!c.collapsed;
+  return '<div class="comp'+(closed?' collapsed':'')+'" data-cid="'+c.id+'">'+
+    '<div class="comp-head">'+
+      '<button class="ccaret'+(closed?' closed':'')+'" data-compcollapse aria-label="收攏內容">'+caretSvg+'</button>'+
+      '<span class="badge">'+svgIcon(meta.icon)+esc(c.type)+'</span>'+
+      '<div class="comp-label"><input data-complabel value="'+escA(c.label)+'" placeholder="欄位名稱（選填，例：分行、客戶統編）"></div>'+
+      '<span class="prog" id="pc-'+c.id+'"><b>'+p.done+'</b>／'+p.total+'</span>'+
+      '<button class="danger tiny" data-delcomp>刪除</button>'+
+    '</div>'+
+    (closed?'':'<div class="comp-body"><div class="fields">'+
+      meta.fields.map(f=>fieldHTML(f,c.fields)).join('')+
+    '</div></div>')+'</div>';
+}
+
+function screenHTML(){ return ''; } // 已由樹狀面板取代（保留空函式避免外部誤引用）
+
+/* ---- 樹狀面板 ---- */
+function renderTreeNodes(nodes){
+  return '<ul class="tnode-list">'+nodes.map(n=>{
+    const hasKids=n.children&&n.children.length;
+    const sel=(STATE.selected===n.id)?' sel':'';
+    const p=nodeProgress(n);
+    return '<li class="tnode" data-nid="'+n.id+'">'+
+      '<div class="trow'+sel+'" data-select>'+
+        '<span class="tgrip" data-drag draggable="true" title="拖曳排序">'+gripSvg+'</span>'+
+        (hasKids?'<button class="tcaret'+(n.collapsed?' closed':'')+'" data-tcaret aria-label="展開收合">'+caretSvg+'</button>':'<span class="tcaret-sp"></span>')+
+        '<span class="tname" title="連點兩下可改名">'+esc(n.name||'（未命名）')+'</span>'+
+        '<span class="tprog" id="tp-'+n.id+'">'+(p.done?p.done+'/'+p.total:'')+'</span>'+
+        '<span class="trow-acts">'+
+          '<button class="tmini" data-add-child title="新增子節點">＋</button>'+
+          '<button class="tmini danger" data-del-node title="刪除節點">×</button>'+
+        '</span>'+
+      '</div>'+
+      (hasKids&&!n.collapsed?renderTreeNodes(n.children):'')+
+    '</li>';
+  }).join('')+'</ul>';
+}
+function renderTreePanel(){
+  return '<aside class="tree-panel">'+
+    '<div class="tree-top"><span class="eyebrow">頁面／功能架構</span>'+
+      '<button class="ghost tiny" data-tree-hide title="隱藏架構">‹ 隱藏</button></div>'+
+    (STATE.tree.length ? '<div class="tree">'+renderTreeNodes(STATE.tree)+'</div>'
+      : '<div class="tree-empty">尚無節點。<br>先新增頂層節點（例如「行銷與績效管理專區」），再往下加子節點。</div>')+
+    '<button class="tiny tree-add" data-add-top>＋ 新增頂層節點</button>'+
+  '</aside>'+
+  '<button class="tree-reveal" data-tree-show title="顯示架構">›</button>';
+}
+
+/* ---- 詳細面板 ---- */
+function renderDetailPanel(){
+  const node=getSelected();
+  if(!node){
+    return '<section class="detail-panel"><div class="detail-empty">'+
+      (STATE.tree.length?'從左側架構點選一個節點，開始記錄該畫面的細節。':'先在左側建立頁面／功能架構，再點節點記錄細節。')+
+    '</div></section>';
+  }
+  const path=pathOf(node.id)||[node];
+  const crumb=path.map((n,i)=>'<span class="crumb'+(i===path.length-1?' cur':'')+'">'+esc(n.name||'（未命名）')+'</span>').join('<span class="crumb-sep">›</span>');
+  const p=nodeProgress(node);
+  const typeChips=Object.keys(COMPONENT_TYPES).map(t=>
+    '<button type="button" class="type-chip" data-addcomp="'+escA(t)+'">'+svgIcon(COMPONENT_TYPES[t].icon)+esc(t)+'</button>').join('');
+  return '<section class="detail-panel" data-nid="'+node.id+'">'+
+    '<div class="detail-head">'+
+      '<div class="crumbs"><span class="crumb-label">選單路徑</span>'+crumb+'</div>'+
+      '<div class="detail-title">'+
+        '<input data-nodename value="'+escA(node.name)+'" placeholder="節點名稱（例：各產品比較分析表）">'+
+        '<span class="prog" id="pn-'+node.id+'"><b>'+p.done+'</b>／'+p.total+'</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="detail-body">'+
+      '<div class="section-label"><span class="eyebrow">畫面資訊</span><span class="rule"></span></div>'+
+      '<div class="fields">'+SCREEN_FIELDS.map(f=>fieldHTML(f,node.fields)).join('')+'</div>'+
+      (node.components.length?'<div class="section-label"><span class="eyebrow">元件</span><span class="rule"></span></div>'+
+        node.components.map(c=>compHTML(node,c)).join(''):'')+
+      '<div class="add-comp"><span class="eyebrow">加入元件</span><div class="type-grid">'+typeChips+'</div></div>'+
+    '</div>'+
+  '</section>';
+}
+
+function render(){
+  app.innerHTML='<div class="arch'+(STATE.treeHidden?' tree-collapsed':'')+'">'+renderTreePanel()+renderDetailPanel()+'</div>';
+  updateOverview();
+  $('#mClient').value=STATE.meta.client; $('#mDate').value=STATE.meta.date; $('#mNote').value=STATE.meta.note;
+}
+// 只重繪右側詳細面板（選取節點時用，樹的 DOM 保持不動，雙擊改名才成立）
+function refreshDetail(){
+  const arch=app.querySelector('.arch'); if(!arch) return render();
+  const old=arch.querySelector('.detail-panel'); if(old) old.outerHTML=renderDetailPanel();
+  updateOverview();
+}
+
+function updateOverview(){
+  const nodes=allNodes(); const p=allProgress();
+  $('#ovCount').textContent='共 '+nodes.length+' 個節點';
+  $('#ovProg').textContent='已填 '+p.done+'／'+p.total;
+  $('#ovBar').style.width=(p.total?Math.round(p.done/p.total*100):0)+'%';
+}
+function refreshProgress(nid){
+  const node=findNode(nid); if(!node) return;
+  const np=nodeProgress(node); const pn=$('#pn-'+nid); if(pn) pn.innerHTML='<b>'+np.done+'</b>／'+np.total;
+  (node.components||[]).forEach(c=>{ const cp=compProgress(c); const ce=$('#pc-'+c.id); if(ce) ce.innerHTML='<b>'+cp.done+'</b>／'+cp.total; });
+  const tp=$('#tp-'+nid); if(tp) tp.textContent=np.done?(np.done+'/'+np.total):'';
+  updateOverview();
+}
+
+/* ---- 操作 ---- */
+function addTopNode(){ const n=makeNode(''); STATE.tree.push(n); STATE.selected=n.id; render(); scheduleSave(); }
+function findScope(el){
+  const node=getSelected(); if(!node) return {};
+  const cid=el.closest('.comp')?.dataset.cid;
+  const scope=cid ? (node.components.find(c=>c.id===cid)||{}).fields : node.fields;
+  return {node, nid:node.id, cid, scope};
+}
+
+app.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.matches('[data-input]')){
+    const {nid,scope}=findScope(t); if(!scope) return;
+    const fkey=t.closest('.field').dataset.fkey; scope[fkey]=t.value;
+    t.closest('.field').querySelector('.dot').classList.toggle('on', t.value.trim()!=='');
+    refreshProgress(nid); scheduleSave();
+  }else if(t.matches('[data-nodename]')){
+    const node=getSelected(); if(node){ node.name=t.value;
+      const tn=document.querySelector('.tnode[data-nid="'+node.id+'"] > .trow .tname'); if(tn) tn.textContent=node.name||'（未命名）';
+      const cur=document.querySelector('.detail-head .crumb.cur'); if(cur) cur.textContent=node.name||'（未命名）';
+      scheduleSave(); }
+  }else if(t.matches('[data-condinput]')){
+    const {scope}=findScope(t); if(scope){ scope[t.dataset.ckey]=t.value; scheduleSave(); }
+  }else if(t.matches('[data-complabel]')){
+    const {node,cid}=findScope(t); const c=node&&node.components.find(x=>x.id===cid); if(c){ c.label=t.value; scheduleSave(); }
+  }else if(t.matches('[data-meta]')){
+    STATE.meta[t.dataset.meta]=t.value; scheduleSave();
+  }
+});
+
+document.addEventListener('input',e=>{ if(e.target.matches('[data-meta]')){ STATE.meta[e.target.dataset.meta]=e.target.value; scheduleSave(); }});
+
+app.addEventListener('click',e=>{
+  // 是否／選擇 pills（check／req／choice 共用）
+  const pill=e.target.closest('[data-pill]');
+  if(pill){
+    const {nid,scope}=findScope(pill); if(!scope) return;
+    const field=pill.closest('.field'); const fkey=field.dataset.fkey; const val=pill.dataset.val;
+    scope[fkey]=(scope[fkey]===val)?'':val;
+    if(field.dataset.ftype==='req'){ refreshDetail(); refreshProgress(nid); scheduleSave(); return; } // 需重繪以顯示／隱藏「條件」輸入框
+    pill.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('sel', b.dataset.val===scope[fkey]));
+    field.querySelector('.dot').classList.toggle('on', !!scope[fkey]);
+    refreshProgress(nid); scheduleSave(); return;
+  }
+  // 多選 chips
+  const mc=e.target.closest('[data-multi]');
+  if(mc){
+    const {nid,scope}=findScope(mc); if(!scope) return;
+    const field=mc.closest('.field'); const fkey=field.dataset.fkey; const val=mc.dataset.val;
+    let arr=Array.isArray(scope[fkey])?scope[fkey].slice():[];
+    arr=arr.includes(val)?arr.filter(x=>x!==val):arr.concat(val); scope[fkey]=arr;
+    mc.classList.toggle('on', arr.includes(val));
+    field.querySelector('.dot').classList.toggle('on', arr.length>0);
+    refreshProgress(nid); scheduleSave(); return;
+  }
+  // 元件收攏／展開
+  const cc=e.target.closest('[data-compcollapse]');
+  if(cc){ const node=getSelected(); const cid=cc.closest('.comp').dataset.cid; const c=node&&node.components.find(x=>x.id===cid); if(c){ c.collapsed=!c.collapsed; refreshDetail(); scheduleSave(); } return; }
+  // 加入元件
+  const addc=e.target.closest('[data-addcomp]');
+  if(addc){ const node=getSelected(); if(!node) return; node.components.push({id:uid(),type:addc.dataset.addcomp,label:'',collapsed:false,fields:{}}); render(); scheduleSave(); return; }
+  // 刪除元件
+  const delc=e.target.closest('[data-delcomp]');
+  if(delc){ armDelete(delc,()=>{ const node=getSelected(); const cid=delc.closest('.comp').dataset.cid; node.components=node.components.filter(c=>c.id!==cid); render(); scheduleSave(); }); return; }
+  // ---- 樹狀操作 ----
+  const tcaret=e.target.closest('[data-tcaret]');
+  if(tcaret){ const n=findNode(tcaret.closest('.tnode').dataset.nid); n.collapsed=!n.collapsed; render(); scheduleSave(); return; }
+  const addChild=e.target.closest('[data-add-child]');
+  if(addChild){ const n=findNode(addChild.closest('.tnode').dataset.nid); const kid=makeNode(''); n.children.push(kid); n.collapsed=false; STATE.selected=kid.id; render(); scheduleSave(); return; }
+  const delNode=e.target.closest('[data-del-node]');
+  if(delNode){ armDelete(delNode,()=>{ const nid=delNode.closest('.tnode').dataset.nid; const info=parentListOf(nid); if(info) info.list.splice(info.index,1);
+    if(!findNode(STATE.selected)){ const first=allNodes()[0]; STATE.selected=first?first.id:null; }
+    render(); scheduleSave(); }, '×?'); return; }
+  const addTop=e.target.closest('[data-add-top]');
+  if(addTop){ addTopNode(); return; }
+  const hide=e.target.closest('[data-tree-hide]');
+  if(hide){ STATE.treeHidden=true; render(); scheduleSave(); return; }
+  const show=e.target.closest('[data-tree-show]');
+  if(show){ STATE.treeHidden=false; render(); scheduleSave(); return; }
+  // 選取節點（避開列上的按鈕）→ 不重繪整棵樹，雙擊改名才能成立
+  const sel=e.target.closest('[data-select]');
+  if(sel && !e.target.closest('[data-add-child],[data-del-node],[data-tcaret],.tname-edit')){
+    const nid=sel.closest('.tnode').dataset.nid;
+    if(STATE.selected!==nid){
+      STATE.selected=nid;
+      app.querySelectorAll('.trow.sel').forEach(r=>r.classList.remove('sel'));
+      sel.classList.add('sel');
+      refreshDetail(); scheduleSave();
+    }
+    return;
+  }
+});
+
+// 雙擊節點名稱 → 就地改名
+app.addEventListener('dblclick',e=>{
+  const nameEl=e.target.closest('.tname');
+  if(!nameEl || nameEl.querySelector('input')) return;
+  const node=findNode(nameEl.closest('.tnode').dataset.nid); if(!node) return;
+  nameEl.innerHTML='<input class="tname-edit" value="'+escA(node.name||'')+'">';
+  const inp=nameEl.querySelector('input'); inp.focus(); inp.select();
+  let done=false;
+  const finish=(save)=>{ if(done) return; done=true; if(save){ node.name=inp.value; scheduleSave(); } render(); };
+  inp.addEventListener('keydown',ev=>{
+    if(ev.key==='Enter'){ ev.preventDefault(); finish(true); }
+    else if(ev.key==='Escape'){ ev.preventDefault(); finish(false); }
+  });
+  inp.addEventListener('blur',()=>finish(true));
+  inp.addEventListener('click',ev=>ev.stopPropagation());
+});
+
+// 拖曳排序（用握把拖曳；上緣=前、下緣=後、中間=成為子節點）
+let dragId=null;
+function clearDrop(){ app.querySelectorAll('.drop-before,.drop-after,.drop-into,.drop-bad').forEach(x=>x.classList.remove('drop-before','drop-after','drop-into','drop-bad')); }
+function cleanupDrag(){ clearDrop(); app.querySelectorAll('.drag-source').forEach(x=>x.classList.remove('drag-source')); }
+app.addEventListener('dragstart',e=>{
+  const h=e.target.closest('[data-drag]'); if(!h) return;
+  dragId=h.closest('.tnode').dataset.nid;
+  e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain',dragId); }catch(_){}
+  h.closest('.trow').classList.add('drag-source');
+});
+app.addEventListener('dragover',e=>{
+  if(!dragId) return;
+  const row=e.target.closest('.trow'), li=row&&row.closest('.tnode'); if(!li) return;
+  e.preventDefault(); e.dataTransfer.dropEffect='move';
+  clearDrop();
+  const tid=li.dataset.nid;
+  if(tid===dragId || isDescendant(dragId,tid)){ row.classList.add('drop-bad'); return; }
+  const r=row.getBoundingClientRect(), y=e.clientY-r.top;
+  row.classList.add('drop-'+(y<r.height*0.3?'before':y>r.height*0.7?'after':'into'));
+});
+app.addEventListener('drop',e=>{
+  if(!dragId) return;
+  const row=e.target.closest('.trow'), li=row&&row.closest('.tnode');
+  if(li){ e.preventDefault();
+    const tid=li.dataset.nid;
+    const zone=row.classList.contains('drop-before')?'before':row.classList.contains('drop-after')?'after':row.classList.contains('drop-into')?'into':null;
+    cleanupDrag();
+    if(zone){ moveNode(dragId,tid,zone); render(); scheduleSave(); }
+  }
+  dragId=null;
+});
+app.addEventListener('dragend',()=>{ cleanupDrag(); dragId=null; });
+
+// 二次確認刪除（不依賴瀏覽器 confirm 對話框）
+function armDelete(btn,doIt,label){
+  if(btn.dataset.arm){ doIt(); return; }
+  btn.dataset.arm='1'; const old=btn.textContent; btn.textContent=label||'再按一次刪除'; btn.classList.add('armed');
+  const reset=()=>{ if(btn.isConnected){ btn.textContent=old; btn.classList.remove('armed'); delete btn.dataset.arm; } };
+  setTimeout(reset,3000);
+}
+
+/* ---- 截圖上傳 ---- */
+// 上傳時等比縮到最寬 1600px 並轉為 JPEG，控制存檔大小
+function compressFile(file){
+  return new Promise(res=>{
+    const rd=new FileReader();
+    rd.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height; const maxW=1600;
+        if(w>maxW){ h=Math.round(h*maxW/w); w=maxW; }
+        try{
+          const c=document.createElement('canvas'); c.width=w; c.height=h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          res({ id:uid(), name:file.name||'screenshot', data:c.toDataURL('image/jpeg',0.72) });
+        }catch(e){ res({ id:uid(), name:file.name||'screenshot', data:rd.result }); }
+      };
+      img.onerror=()=>res(null);
+      img.src=rd.result;
+    };
+    rd.onerror=()=>res(null);
+    rd.readAsDataURL(file);
+  });
+}
+async function handleFiles(scope,fkey,fileList){
+  const files=[...fileList].filter(f=>f.type&&f.type.startsWith('image/'));
+  if(!files.length||!scope) return;
+  const arr=Array.isArray(scope[fkey])?scope[fkey]:[]; scope[fkey]=arr;
+  stampSave('處理截圖中…');
+  for(const f of files){ const t=await compressFile(f); if(t) arr.push(t); }
+  arr.sort(nameCmp); // 上傳後整份依檔名自然排序
+  render(); scheduleSave();
+}
+function openImagePreview(src,name){
+  $('#modalRoot').innerHTML=
+    '<div class="overlay" data-overlay><div class="img-view">'+
+      '<div class="img-view-head"><span>'+esc(name||'截圖')+'</span><button class="ghost" data-close>關閉</button></div>'+
+      '<img src="'+src+'" alt="'+escA(name||'')+'"></div></div>';
+  bindModalClose();
+}
+
+// 選檔
+app.addEventListener('change',e=>{
+  const inp=e.target.closest('[data-imgadd]'); if(!inp) return;
+  const {scope}=findScope(inp); const fkey=inp.closest('.field').dataset.fkey;
+  handleFiles(scope,fkey,inp.files); inp.value='';
+});
+// 上傳鈕 / 移除 / 放大
+app.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-imgbtn]');
+  if(btn){ btn.closest('.imgs-head').querySelector('[data-imgadd]').click(); return; }
+  const del=e.target.closest('[data-imgdel]');
+  if(del){ const fig=del.closest('.thumb'); const {scope}=findScope(del); const fkey=del.closest('.field').dataset.fkey;
+    const id=fig.dataset.imgid; scope[fkey]=(scope[fkey]||[]).filter(x=>x.id!==id); render(); scheduleSave(); return; }
+  const view=e.target.closest('[data-imgview]');
+  if(view){ openImagePreview(view.getAttribute('src'), view.getAttribute('alt')); return; }
+});
+// 拖曳上傳
+app.addEventListener('dragover',e=>{ const z=e.target.closest('[data-imgzone]'); if(z){ e.preventDefault(); z.classList.add('drag'); }});
+app.addEventListener('dragleave',e=>{ const z=e.target.closest('[data-imgzone]'); if(z && !z.contains(e.relatedTarget)) z.classList.remove('drag'); });
+app.addEventListener('drop',e=>{ const z=e.target.closest('[data-imgzone]'); if(!z) return; e.preventDefault(); z.classList.remove('drag');
+  const {scope}=findScope(z); const fkey=z.closest('.field').dataset.fkey; handleFiles(scope,fkey,e.dataTransfer.files); });
+
+/* ---- 匯出 Markdown ---- */
+// 傳入 imgPathById（圖片id→相對路徑）時，圖片改輸出為 ![名稱](路徑)；不傳則維持純文字（貼文件用）
+function buildMarkdown(imgPathById){
+  const m=STATE.meta; const L=[];
+  L.push('# 舊系統功能現勘紀錄','');
+  L.push('- 客戶／機關：'+(m.client||'（未填）'));
+  L.push('- 拜訪日期：'+(m.date||'（未填）'));
+  if(m.note) L.push('- 功能名稱：'+m.note);
+  L.push('');
+  // 架構圖
+  if(STATE.tree.length){
+    L.push('## 頁面／功能架構','','```');
+    const outline=(nodes,depth)=>nodes.forEach(n=>{
+      const pre=depth===0?'':'    '.repeat(depth-1)+'└';
+      L.push(pre+(n.name||'（未命名）'));
+      outline(n.children||[],depth+1);
+    });
+    outline(STATE.tree,0);
+    L.push('```','');
+  }
+  // 逐節點細節（只列有填的節點）
+  const detail=(nodes)=>nodes.forEach(n=>{
+    const p=nodeProgress(n);
+    if(p.done>0){
+      L.push('## '+(n.name||'（未命名）'));
+      L.push('- 選單路徑：'+menuPathStr(n.id));
+      const fl=SCREEN_FIELDS.filter(f=>filled(f.type,n.fields[f.key]));
+      if(fl.length){ L.push('','### 畫面資訊'); fl.forEach(f=>{
+        if(imgPathById && f.type==='images'){
+          L.push('- '+f.label+'：');
+          (n.fields[f.key]||[]).forEach(img=>{ const p=imgPathById[img.id]; if(p) L.push('  ![' + String(img.name||'').replace(/[\]\n]/g,' ') + '](' + p + ')'); });
+        } else { L.push('- '+f.label+'：'+valText(f,n.fields)); }
+      }); }
+      if(n.components.length){
+        L.push('','### 元件');
+        n.components.forEach(c=>{
+          L.push('','#### ［'+c.type+'］'+(c.label||''));
+          COMPONENT_TYPES[c.type].fields.forEach(f=>{ if(filled(f.type,c.fields[f.key])) L.push('- '+f.label+'：'+valText(f,c.fields)); });
+        });
+      }
+      L.push('');
+    }
+    detail(n.children||[]);
+  });
+  detail(STATE.tree);
+  return L.join('\n');
+}
+// 供 JSON 匯出：深拷貝樹並為每個節點附上算好的選單路徑
+function exportData(){
+  const clone=JSON.parse(JSON.stringify({ meta:STATE.meta, tree:STATE.tree }));
+  const add=(nodes)=>nodes.forEach(n=>{ n.menuPath=menuPathStr(n.id); add(n.children||[]); });
+  add(clone.tree);
+  return clone;
+}
+// 依欄位型態與 opts 產生匯出用的顯示文字（可存取整個 scope 以取得 req 的條件）
+function valText(f, scope){
+  const v=scope[f.key];
+  if(f.type==='check') return CHECK_LABELS[v]||'';
+  if(f.type==='req'){ const map={yes:'是',no:'否',cond:'選擇性',na:'待確認'}; let s=map[v]||''; if(v==='cond'){ const c=scope[f.key+'_cond']; if(c) s+='（'+c+'）'; } return s; }
+  if(f.type==='choice'){ const o=(f.opts||[]).find(x=>x[0]===v); return o?o[1]:''; }
+  if(f.type==='multi'){ const arr=Array.isArray(v)?v:[]; return arr.map(x=>{ const o=(f.opts||[]).find(y=>y[0]===x); return o?o[1]:x; }).join('、'); }
+  if(f.type==='images') return (v?v.length:0)+' 張（'+(v||[]).map(i=>i.name).join('、')+'）';
+  return String(v).replace(/\n/g,' ／ ');
+}
+
+/* ---- 檔名 ---- */
+// 檔名格式：<客戶>_<功能名稱>現勘紀錄_<拜訪日期>
+function baseName(){
+  const clean=s=>String(s||'').replace(/[\\/:*?"<>|]/g,'_').trim();
+  const c=clean(STATE.meta.client)||'客戶';
+  const fn=clean(STATE.meta.note);                          // 功能名稱（meta.note）
+  const d=clean(STATE.meta.date)||new Date().toISOString().slice(0,10); // 拜訪日期，未填則用當天
+  return c+'_'+fn+'現勘紀錄_'+d;
+}
+function download(filename,text){
+  try{
+    const blob=new Blob([text],{type:'application/octet-stream'});
+    const url=URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }catch(e){}
+}
+
+/* ---- 打包下載（JSON＋MD＋圖片，依功能樹狀結構）---- */
+// 檔案系統非法字元清理
+function sanitizeName(s){ return String(s||'').replace(/[\\/:*?"<>|]/g,'_').replace(/[\x00-\x1f]/g,'').replace(/^\.+/,'').trim(); }
+// 由 dataURL 判斷副檔名（本工具截圖多為 jpeg）
+function extFromDataUrl(d){ const m=/^data:image\/([a-z0-9.+-]+)/i.exec(d||''); const t=(m?m[1]:'jpeg').toLowerCase(); return t==='jpeg'?'jpg':t; }
+// 同層資料夾名去重（同名加序號）
+function siblingFolderNames(nodes){ const used={}; return nodes.map(n=>{ const base=sanitizeName(n.name)||'（未命名）'; let name=base,i=2; while(used[name]) name=base+'_'+(i++); used[name]=1; return name; }); }
+// 走訪樹狀，收集圖片檔（路徑對映功能樹階層），回傳 檔案清單 與 圖片id→相對路徑
+function bundleImages(){
+  const files=[]; const pathById={};
+  const imgKeys=SCREEN_FIELDS.filter(f=>f.type==='images').map(f=>f.key);
+  const walk=(nodes,parent)=>{
+    const names=siblingFolderNames(nodes);
+    nodes.forEach((n,i)=>{
+      const folder=parent+'/'+names[i]; const used={};
+      imgKeys.forEach(k=>{ (n.fields[k]||[]).forEach(img=>{
+        const ext=extFromDataUrl(img.data);
+        const stem=sanitizeName(String(img.name||'screenshot').replace(/\.[^.]+$/,''))||'screenshot';
+        let file=stem+'.'+ext, j=2; while(used[file]) file=stem+'_'+(j++)+'.'+ext; used[file]=1;
+        const rel=folder+'/'+file; files.push({path:rel,dataUrl:img.data}); pathById[img.id]=rel;
+      }); });
+      walk(n.children||[],folder);
+    });
+  };
+  walk(STATE.tree,'screens');
+  return {files,pathById};
+}
+// dataURL → bytes
+function dataUrlToBytes(d){ const i=String(d).indexOf(','); const bin=atob(String(d).slice(i+1)); const out=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++) out[k]=bin.charCodeAt(k); return out; }
+// CRC32
+const CRC_TABLE=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(bytes){ let c=0xFFFFFFFF; for(let i=0;i<bytes.length;i++) c=CRC_TABLE[(c^bytes[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+// 最小 ZIP（store 不壓縮；JPEG 已壓縮），entries=[{path,bytes}]，檔名以 UTF-8
+function zipStore(entries){
+  const enc=new TextEncoder(); const chunks=[]; let offset=0; const central=[];
+  const u16=v=>new Uint8Array([v&255,(v>>8)&255]);
+  const u32=v=>new Uint8Array([v&255,(v>>8)&255,(v>>16)&255,(v>>>24)&255]);
+  const push=a=>{ chunks.push(a); offset+=a.length; };
+  entries.forEach(e=>{
+    const name=enc.encode(e.path), data=e.bytes, crc=crc32(data), at=offset;
+    push(u32(0x04034b50)); push(u16(20)); push(u16(0x0800)); push(u16(0));
+    push(u16(0)); push(u16(0)); push(u32(crc)); push(u32(data.length)); push(u32(data.length));
+    push(u16(name.length)); push(u16(0)); push(name); push(data);
+    central.push({name,crc,size:data.length,at});
+  });
+  const cdStart=offset;
+  central.forEach(c=>{
+    push(u32(0x02014b50)); push(u16(20)); push(u16(20)); push(u16(0x0800)); push(u16(0));
+    push(u16(0)); push(u16(0)); push(u32(c.crc)); push(u32(c.size)); push(u32(c.size));
+    push(u16(c.name.length)); push(u16(0)); push(u16(0)); push(u16(0)); push(u16(0)); push(u32(0));
+    push(u32(c.at)); push(c.name);
+  });
+  const cdSize=offset-cdStart;
+  push(u32(0x06054b50)); push(u16(0)); push(u16(0)); push(u16(central.length)); push(u16(central.length));
+  push(u32(cdSize)); push(u32(cdStart)); push(u16(0));
+  const out=new Uint8Array(offset); let p=0; chunks.forEach(a=>{ out.set(a,p); p+=a.length; }); return out;
+}
+function downloadBytes(filename,bytes){
+  try{ const blob=new Blob([bytes],{type:'application/zip'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }catch(e){}
+}
+function buildBundle(){
+  try{
+    stampSave('產生打包檔…');
+    const base=baseName(); const {files,pathById}=bundleImages(); const enc=new TextEncoder();
+    const entries=[
+      { path:base+'/'+base+'.json', bytes:enc.encode(JSON.stringify(exportData(),null,2)) },
+      { path:base+'/'+base+'.md',   bytes:enc.encode(buildMarkdown(pathById)) },
+    ];
+    files.forEach(f=>entries.push({ path:base+'/'+f.path, bytes:dataUrlToBytes(f.dataUrl) }));
+    downloadBytes(base+'.zip', zipStore(entries));
+    stampSave('已下載打包檔 · 含 '+files.length+' 張圖片');
+  }catch(e){ stampSave('打包失敗：'+((e&&e.message)||e)); }
+}
+
+/* ---- Modal ---- */
+function closeModal(){ $('#modalRoot').innerHTML=''; }
+function openExport(kind){
+  const isJson=kind==='json';
+  const content=isJson?JSON.stringify(exportData(),null,2):buildMarkdown();
+  const fname=baseName()+(isJson?'.json':'.md');
+  $('#modalRoot').innerHTML=
+    '<div class="overlay" data-overlay><div class="modal">'+
+      '<div class="modal-head"><h3>'+(isJson?'匯出 JSON（存檔）':'匯出 Markdown')+'</h3><button class="ghost" data-close>關閉</button></div>'+
+      '<div class="modal-body"><p>'+(isJson?'這是你的存檔。建議下載保存；下次用「載入存檔」讀回即可接續。':'可直接貼進需求文件。只會列出已填欄位。')+'</p>'+
+        '<textarea readonly id="exText">'+esc(content)+'</textarea></div>'+
+      '<div class="modal-foot">'+
+        '<button data-copy>複製</button>'+
+        '<button class="primary" data-dl>下載檔案（'+esc(fname)+'）</button>'+
+      '</div></div></div>';
+  $('[data-dl]').onclick=()=>download(fname,content);
+  $('[data-copy]').onclick=()=>copyText(content,$('#exText'),$('[data-copy]'));
+  bindModalClose();
+}
+function openImport(){
+  $('#modalRoot').innerHTML=
+    '<div class="overlay" data-overlay><div class="modal">'+
+      '<div class="modal-head"><h3>載入存檔</h3><button class="ghost" data-close>關閉</button></div>'+
+      '<div class="modal-body"><p>選擇先前匯出的 .json 檔，或把內容貼到下方。載入會取代目前所有資料。</p>'+
+        '<div class="file-row"><input type="file" accept=".json,application/json" id="impFile"></div>'+
+        '<textarea id="impText" placeholder="或在此貼上 JSON…"></textarea></div>'+
+      '<div class="modal-foot"><button data-close>取消</button><button class="primary" data-load>載入</button></div>'+
+    '</div></div>';
+  $('#impFile').onchange=ev=>{ const f=ev.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ $('#impText').value=r.result; }; r.readAsText(f); };
+  $('[data-load]').onclick=()=>{
+    try{ const d=JSON.parse($('#impText').value); if(!d||(!Array.isArray(d.tree)&&!Array.isArray(d.screens))) throw 0;
+      STATE=normalize(d); closeModal(); render(); scheduleSave(); stampSave('已載入存檔');
+    }catch(e){ alert('無法解析，請確認是先前匯出的 JSON 內容。'); }
+  };
+  bindModalClose();
+}
+function openClearConfirm(){
+  const n=allNodes().length;
+  $('#modalRoot').innerHTML=
+    '<div class="overlay" data-overlay><div class="modal">'+
+      '<div class="modal-head"><h3>清空資料</h3><button class="ghost" data-close>關閉</button></div>'+
+      '<div class="modal-body">'+
+        '<p class="warn-text">此動作會清除整個架構與所有已填內容（含 '+n+' 個節點、所有欄位與截圖），並一併清掉本機自動暫存。清空後無法復原。</p>'+
+        '<p>建議先按下方「先匯出 JSON 備份」下載一份存檔，之後若還需要可用「載入存檔」讀回。</p>'+
+      '</div>'+
+      '<div class="modal-foot">'+
+        '<button data-backup>先匯出 JSON 備份</button>'+
+        '<button data-close>取消</button>'+
+        '<button class="danger-solid" data-confirm-clear>確認清空</button>'+
+      '</div></div></div>';
+  $('[data-backup]').onclick=()=>download(baseName()+'.json', JSON.stringify(exportData(),null,2));
+  $('[data-confirm-clear]').onclick=doClearAll;
+  bindModalClose();
+}
+function doClearAll(){
+  STATE={ meta:{client:'',date:'',note:''}, tree:[], selected:null, treeHidden:false };
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  closeModal(); render(); stampSave('已清空資料');
+}
+function bindModalClose(){
+  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModal);
+  const ov=$('[data-overlay]'); if(ov) ov.addEventListener('click',e=>{ if(e.target===ov) closeModal(); });
+}
+function copyText(text,ta,btn){
+  const done=()=>{ const o=btn.textContent; btn.textContent='已複製'; setTimeout(()=>btn.textContent=o,1400); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{ ta.select(); document.execCommand&&document.execCommand('copy'); done(); });
+  }else{ ta.select(); try{document.execCommand('copy');}catch(e){} done(); }
+}
+
+$('#btnExportJson').onclick=()=>openExport('json');
+$('#btnExportMd').onclick=()=>openExport('md');
+$('#btnExportBundle').onclick=buildBundle;
+$('#btnImport').onclick=openImport;
+$('#btnClearAll').onclick=openClearConfirm;
+$('#btnAddScreen').onclick=addTopNode;
+
+/* ---- 啟動 ---- */
+loadLocal();
+render();
+if(allNodes().length) stampSave('已載入暫存資料');
+</script>
+</body>
+</html>
